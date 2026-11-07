@@ -1,0 +1,40 @@
+
+//
+// Detection: Encoded PowerShell Execution
+// Platform: Microsoft Sentinel
+// Data source: DeviceProcessEvents
+// MITRE ATT&CK: T1059.001
+//
+
+DeviceProcessEvents
+| where Timestamp >= ago(24h)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| extend CommandLine = tostring(ProcessCommandLine)
+| where CommandLine matches regex
+    @"(?i)(?:^|\s)-(?:enc|encodedcommand)(?:\s|:|$)"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    ProcessId
+| order by Timestamp desc
+
+
+3. Understand the regex
+Let's break down this expression:
+(?i)(?:^|\s)-(?:enc|encodedcommand)(?:\s|:|$)
+
+
+| Part | Meaning |
+|---|---|
+| (?i) | Case-insensitive matching |
+| (?:^|\s) | Beginning of text or whitespace |
+| - | Parameter begins with a hyphen |
+| (?:enc|encodedcommand) | Matches either parameter name |
+| (?:\s|:|$) | Followed by whitespace, colon or end of text |
+
+This is an initial matching pattern. It is not guaranteed to cover every PowerShell invocation format;

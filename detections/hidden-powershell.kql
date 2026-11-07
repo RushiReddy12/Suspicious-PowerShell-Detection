@@ -1,0 +1,52 @@
+1. Why detect hidden PowerShell?
+PowerShell supports launching processes with a hidden window.
+
+For example:
+powershell.exe -WindowStyle Hidden -Command "Get-Process"
+
+
+An attacker may use this technique to reduce the visibility of malicious activity to an interactive user.
+
+However, legitimate background automation can also use hidden execution.
+2. Detection query
+Create detections/hidden-powershell.kql:
+
+//
+// Detection: Hidden PowerShell Execution
+// Platform: Microsoft Sentinel
+// Data source: DeviceProcessEvents
+// MITRE ATT&CK: T1059.001
+//
+
+DeviceProcessEvents
+| where Timestamp >= ago(24h)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| extend CommandLine = tostring(ProcessCommandLine)
+| where CommandLine matches regex
+    @"(?i)-(?:windowstyle|w)\s+['""]?hidden(?:['""]|\s|$)"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    ProcessId
+| order by Timestamp desc
+
+
+
+3. Understand the regex
+(?i)-(?:windowstyle|w)\s+['""]?hidden(?:['""]|\s|$)
+
+
+| Pattern | Meaning |
+|---|---|
+| (?i) | Case-insensitive matching |
+| - | Parameter prefix |
+| (?:windowstyle\|w) | Full or abbreviated parameter |
+| \s+ | One or more spaces |
+| ['""]? | Optional quote |
+| hidden | Hidden window value |
+| (?:['""]|\s|$) | Value boundary |

@@ -1,0 +1,39 @@
+
+//
+// Detection: PowerShell Execution Policy Bypass
+// Platform: Microsoft Sentinel
+// Data source: DeviceProcessEvents
+// MITRE ATT&CK: T1059.001
+//
+
+DeviceProcessEvents
+| where Timestamp >= ago(24h)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| extend CommandLine = tostring(ProcessCommandLine)
+| where CommandLine matches regex
+    @"(?i)-(?:executionpolicy|ep)\s+['""]?bypass(?:['""]|\s|$)"
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    ProcessId
+| order by Timestamp desc
+
+
+Understand the regex
+(?i)-(?:executionpolicy|ep)\s+['""]?bypass(?:['""]|\s|$)
+
+
+| Pattern | Meaning |
+|---|---|
+| (?i) | Case-insensitive matching |
+| - | Parameter starts with hyphen |
+| (?:executionpolicy|ep) | Full or abbreviated parameter |
+| \s+ | One or more spaces |
+| ['""]? | Optional quote |
+| bypass | Matches bypass value |
+| (?:['""]|\s|$) | Checks the value boundary |

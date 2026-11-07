@@ -1,0 +1,18 @@
+// Detection: PowerShell Process Execution - Base
+// Purpose: Identify PowerShell process executions for hunting and investigation.
+// Data source: Microsoft Defender XDR DeviceProcessEvents
+
+DeviceProcessEvents
+| where Timestamp >= ago(24h)
+| where FileName in~ ("powershell.exe", "pwsh.exe")
+| project
+    Timestamp,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    ProcessId,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    InitiatingProcessId
+| order by Timestamp desc

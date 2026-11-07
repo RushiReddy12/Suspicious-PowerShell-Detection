@@ -16,3 +16,11 @@ DeviceProcessEvents
     InitiatingProcessCommandLine,
     InitiatingProcessId
 | order by Timestamp desc
+
+This query is a baseline hunting query, not yet a suspicious-activity alert.
+
+Used it to understand:
+- Which accounts execute PowerShell.
+- Which parent processes launch it.
+- Which devices generate PowerShell activity.
+- What normal command lines look like.
